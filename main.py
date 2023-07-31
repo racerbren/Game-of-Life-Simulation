@@ -14,14 +14,43 @@ def randomGrid(N):
 def addGlider(i, j, grid):
     """Adds a common pattern which seemingly glides in one direction"""
     glider = np.array([
-        [0, 0, 255],
-        [255, 0, 255],
-        [0, 255, 255]
+        [OFF, OFF, ON],
+        [ON, OFF, ON],
+        [OFF, ON, ON]
     ])
     grid[i:i + 3, j:j + 3] = glider
 
 def update(frameNum, img, grid, N):
-    pass
+    newGrid = grid.copy()
+    # For every cell in the grid, check all 8 of its surrounding neighbors
+    for i in range(N):
+        for j in range(N):
+            # Modulus operators allow for checking cells that are at the edge
+            # If a cell we are checking is past the edge, or has value of N, then reset to 0
+            # If a cell we are checking has negative value, then reset to N - 1
+            # This allows the simulation to operate infinitely on a 2D grid
+            total = int((grid[i, (j - 1) % N] +             # Check the left neighbor
+                         grid[i, (j + 1) % N] +             # Check the right neighbor
+                         grid[(i - 1) % N, j] +             # Check the top neighbor
+                         grid[(i + 1) % N, j] +             # Check the bottom neighbor
+                         grid[(i - 1) % N, (j - 1) % N] +   # Check the top left neighbor
+                         grid[(i - 1) % N, (j + 1) % N] +   # Check the top right neighbor
+                         grid[(i + 1) % N, (j - 1) % N] +   # Check the bottom left neighbor
+                         grid[(i + 1) % N, (j + 1) % N]     # Check the bottom right neighbor
+                        ) / 255)                            # Divide by 255 to get a single digit number, 0-8
+            
+            # If the current cell is ON, check the rules
+            if grid[i, j] is ON:
+                if (total < 2) or (total > 3):
+                    newGrid[i, j] = OFF
+            # If the current cell is OFF, check the rules
+            else:
+                if total is 3:
+                    newGrid[i, j] = ON
+
+    img.set_data(newGrid)
+    grid[:] = newGrid[:]
+    return img
 
 if __name__ == "__main__":
     """This program is designed to simulate John Conway's Game of Life"""
