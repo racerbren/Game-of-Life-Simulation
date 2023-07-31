@@ -20,7 +20,23 @@ def addGlider(i, j, grid):
     ])
     grid[i:i + 3, j:j + 3] = glider
 
+def addGosperGun(i, j, grid):
+    """Adds a gosper glider gun pattern to the grid"""
+    gosper = np.array([
+        [OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, ON, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF],
+        [OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, ON, OFF, ON, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF],
+        [OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, ON, ON, OFF, OFF, OFF, OFF, OFF, OFF, ON, ON, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, ON],
+        [OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, ON, OFF, OFF, OFF, ON, OFF, OFF, OFF, OFF, ON, ON, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, ON],
+        [ON, ON, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, ON, OFF, OFF, OFF, OFF, OFF, ON, OFF, OFF, OFF, ON, ON, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF],
+        [ON, ON, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, ON, OFF, OFF, OFF, ON, OFF, ON, ON, OFF, OFF, OFF, OFF, ON, OFF, ON, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF],
+        [OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, ON, OFF, OFF, OFF, OFF, OFF, ON, OFF, OFF, OFF, OFF, OFF, OFF, OFF, ON, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF], 
+        [OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, ON, OFF, OFF, OFF, ON, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF],
+        [OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, ON, ON, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF]
+    ])
+    grid[i:i + 9, j:j + 36] = gosper
+
 def update(frameNum, img, grid, N):
+    """This function updates the grid every frame"""
     newGrid = grid.copy()
     # For every cell in the grid, check all 8 of its surrounding neighbors
     for i in range(N):
@@ -40,12 +56,12 @@ def update(frameNum, img, grid, N):
                         ) / 255)                            # Divide by 255 to get a single digit number, 0-8
             
             # If the current cell is ON, check the rules
-            if grid[i, j] is ON:
+            if grid[i, j] == ON:
                 if (total < 2) or (total > 3):
                     newGrid[i, j] = OFF
             # If the current cell is OFF, check the rules
             else:
-                if total is 3:
+                if total == 3:
                     newGrid[i, j] = ON
 
     img.set_data(newGrid)
@@ -63,6 +79,7 @@ if __name__ == "__main__":
     parser.add_argument('--movfile', dest='movfile', required=False)
     parser.add_argument('--interval', dest='interval', required=False)
     parser.add_argument('--glider', action='store_true', required=False)
+    parser.add_argument('--gosper', action='store_true', required=False)
 
     # Parse the command line arguments
     args = parser.parse_args()
@@ -81,6 +98,9 @@ if __name__ == "__main__":
     if args.glider:
         grid = np.zeros(N*N).reshape(N,N)       # Create a grid full of off cells and add a glider pattern to the top left
         addGlider(1, 1, grid)
+    if args.gosper:
+        grid = np.zeros(N*N).reshape(N, N)      # Create a grid full of off cells and add the gosper gun pattern t the top left
+        addGosperGun(1, 1, grid)
     else:
         grid = randomGrid(N)                    # Create a grid full of random on and off cells
     
