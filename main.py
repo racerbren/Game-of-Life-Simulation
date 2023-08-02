@@ -1,4 +1,4 @@
-import sys, argparse
+import sys, argparse, os
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -34,6 +34,19 @@ def addGosperGun(i, j, grid):
         [OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, ON, ON, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF, OFF]
     ])
     grid[i:i + 9, j:j + 36] = gosper
+
+def readPattern(filename, grid):
+    """This function reads in text files and updates the grid based on values that are in the text file.
+       Text files should begin with the size of the numpy array / grid as the first line. All succeeding lines represent the values
+       either 0 or 255 of the cell"""
+    with open(fileName, 'r') as file:
+        N = int(file.readline())            # The first line of the text file should be the size of the numpy array
+        grid = np.zeros(N*N).reshape(N, N)  # Initialize the grid to just zeros
+        for i in range(0, N - 1):
+            for count, j in enumerate((file.readline()).split()):   # Split each line into a list of values either 0 or 255
+                grid[i, count] = j
+    return grid, N
+
 
 def update(frameNum, img, grid, N):
     """This function updates the grid every frame"""
@@ -80,6 +93,7 @@ if __name__ == "__main__":
     parser.add_argument('--interval', dest='interval', required=False)
     parser.add_argument('--glider', action='store_true', required=False)
     parser.add_argument('--gosper', action='store_true', required=False)
+    parser.add_argument('--readfile', dest='fileName', required=False)
 
     # Parse the command line arguments
     args = parser.parse_args()
@@ -101,6 +115,9 @@ if __name__ == "__main__":
     if args.gosper:
         grid = np.zeros(N*N).reshape(N, N)      # Create a grid full of off cells and add the gosper gun pattern t the top left
         addGosperGun(1, 1, grid)
+    if args.fileName:
+        fileName = args.fileName
+        grid, N = readPattern(fileName, grid)
     else:
         grid = randomGrid(N)                    # Create a grid full of random on and off cells
     
@@ -108,7 +125,7 @@ if __name__ == "__main__":
     img = ax.imshow(grid, interpolation='nearest')
     anim = animation.FuncAnimation(fig, 
                                    update, 
-                                   fargs=(img, grid, N, ), 
+                                   fargs=(img, grid, N, ),      # Update the animation every frame
                                    frames=10, 
                                    interval=updateInterval, 
                                    save_count=50)
