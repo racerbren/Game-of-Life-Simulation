@@ -1,4 +1,4 @@
-import sys, argparse, os
+import sys, argparse
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -47,6 +47,32 @@ def readPattern(filename, grid):
                 grid[i, count] = j
     return grid, N
 
+def click(event):
+    """This function captures the mouse position when it is clicked and changes the inhabiting cell's status"""
+    newGrid = grid.copy()
+    j = int(event.xdata)    # Capture cell by recording the x and y position of the mouse click
+    i = int(event.ydata)
+    if grid[i, j] == ON:
+        newGrid[i, j] = OFF    # If the clicked cell is on then turn it off, if the clicked cell is off then turn it on
+    else:
+        newGrid[i, j] = ON
+    img.set_data(newGrid)
+    grid[:] = newGrid[:]
+    plt.show()              # Even if the game is paused, show the user which cells they have clicked
+    return img
+
+def pause(event):
+    """This function captures key input and pauses the simulation if the space key has been pressed.
+       The simulation resumes when the space key is pressed again."""
+    global paused           # Access the paused boolean in the global scope
+    key = event.key
+    if key == " ":
+        if paused:
+            anim.resume()
+            paused = False
+        else:
+            anim.pause()
+            paused = True
 
 def update(frameNum, img, grid, N):
     """This function updates the grid every frame"""
@@ -59,13 +85,13 @@ def update(frameNum, img, grid, N):
             # If a cell we are checking has negative value, then reset to N - 1
             # This allows the simulation to operate infinitely on a 2D grid
             total = int((grid[i, (j - 1) % N] +             # Check the left neighbor
-                         grid[i, (j + 1) % N] +             # Check the right neighbor
-                         grid[(i - 1) % N, j] +             # Check the top neighbor
-                         grid[(i + 1) % N, j] +             # Check the bottom neighbor
-                         grid[(i - 1) % N, (j - 1) % N] +   # Check the top left neighbor
-                         grid[(i - 1) % N, (j + 1) % N] +   # Check the top right neighbor
-                         grid[(i + 1) % N, (j - 1) % N] +   # Check the bottom left neighbor
-                         grid[(i + 1) % N, (j + 1) % N]     # Check the bottom right neighbor
+                        grid[i, (j + 1) % N] +             # Check the right neighbor
+                        grid[(i - 1) % N, j] +             # Check the top neighbor
+                        grid[(i + 1) % N, j] +             # Check the bottom neighbor
+                        grid[(i - 1) % N, (j - 1) % N] +   # Check the top left neighbor
+                        grid[(i - 1) % N, (j + 1) % N] +   # Check the top right neighbor
+                        grid[(i + 1) % N, (j - 1) % N] +   # Check the bottom left neighbor
+                        grid[(i + 1) % N, (j + 1) % N]     # Check the bottom right neighbor
                         ) / 255)                            # Divide by 255 to get a single digit number, 0-8
             
             # If the current cell is ON, check the rules
@@ -100,7 +126,7 @@ if __name__ == "__main__":
 
     # Initialization
     N = 100
-    if args.N and int(args.N) > 8:      # Set the grid size to 100 unless an argument greater than 8 was made
+    if args.N and int(args.N) > 8 and int(args.N) <= 100:      # Set the grid size to 100 unless an argument greater than 8 and less than 100 was made
         N = int(args.N)
     
     updateInterval = 50
@@ -122,13 +148,26 @@ if __name__ == "__main__":
         grid = randomGrid(N)                    # Create a grid full of random on and off cells
     
     fig, ax = plt.subplots()
-    img = ax.imshow(grid, interpolation='nearest')
+    fig.set_facecolor("black")
+    ax.spines['top'].set_color("white")
+    ax.spines['bottom'].set_color("white")
+    ax.spines['left'].set_color("white")
+    ax.spines['right'].set_color("white")
+    ax.text(N / 10, N / -15, "Conway's Game of Life", color='w', family='sans-serif', fontweight='bold', fontsize=16)
+    img = ax.imshow(grid, interpolation='nearest', cmap='gray')
+
     anim = animation.FuncAnimation(fig, 
                                    update, 
                                    fargs=(img, grid, N, ),      # Update the animation every frame
                                    frames=10, 
                                    interval=updateInterval, 
                                    save_count=50)
+
+    paused = False
+    cidrelease = fig.canvas.mpl_connect('button_release_event', click)  # Set up the events for clicking and key presses
+    cidkey = fig.canvas.mpl_connect('key_release_event', pause)
+
     if args.movfile:
         anim.save(args.movfile, fps=30, extra_args=['-vcodec', 'libx264'])
+
     plt.show()
